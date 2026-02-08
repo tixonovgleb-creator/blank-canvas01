@@ -1,7 +1,6 @@
 // Gemini AI Service for chat functionality
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const HISTORY_KEY = "berezka_chat_history";
 
 const SYSTEM_PROMPT = `Ты — дружелюбный и заботливый консультант базы отдыха «Берёзка».
 
@@ -26,26 +25,9 @@ const SYSTEM_PROMPT = `Ты — дружелюбный и заботливый �
 
 class GeminiService {
   private conversationHistory: { role: string; content: string }[] = [];
-  constructor() {
-    try {
-      const saved = localStorage.getItem(HISTORY_KEY);
-      if (saved) {
-        this.conversationHistory = JSON.parse(saved);
-      }
-    } catch {
-      this.conversationHistory = [];
-    }
-  }
-
-  private saveHistory() {
-    try {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(this.conversationHistory.slice(-30)));
-    } catch {}
-  }
 
   async *sendMessageStream(message: string): AsyncGenerator<string> {
     this.conversationHistory.push({ role: "user", content: message });
-    this.saveHistory();
 
     // If no API key, return a mock response
     if (!API_KEY || API_KEY === "PLACEHOLDER_API_KEY") {
@@ -88,6 +70,7 @@ class GeminiService {
       }
 
       this.conversationHistory.push({ role: "assistant", content: fullResponse });
+      this.saveHistory();
     } catch (error) {
       console.error("Gemini API error:", error);
       const errorMessage =
