@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Send, 
@@ -9,14 +8,10 @@ import {
   Coffee, 
   Menu, 
   X,
-  MessageSquare,
   ArrowRight,
-  Bell,
   Calculator,
-  Calendar,
   ChevronRight,
-  ChevronLeft,
-  Phone
+  ChevronLeft
 } from 'lucide-react';
 import { geminiService } from './services/geminiService';
 import { Message } from './types';
