@@ -1,6 +1,7 @@
 // Gemini AI Service for chat functionality
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const HISTORY_KEY = "berezka_chat_history";
 
 const SYSTEM_PROMPT = `Ты — дружелюбный и заботливый консультант базы отдыха «Берёзка».
 
