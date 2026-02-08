@@ -126,8 +126,17 @@ class GeminiService {
     return "🌲 Добро пожаловать на базу отдыха «Берёзка»!\n\nУ нас есть:\n🏡 Домики (6 и 9 мест)\n🌿 Беседки (10–25 чел)\n🎉 Банкетные залы (35–100 чел)\n🧖 Баня с парной\n\nЧем могу помочь?";
   }
 
+  private saveHistory(): void {
+    try {
+      localStorage.setItem("berezka_chat_history", JSON.stringify(this.conversationHistory));
+    } catch (e) {
+      console.error("Failed to save history:", e);
+    }
+  }
+
   clearHistory(): void {
     this.conversationHistory = [];
+    localStorage.removeItem("berezka_chat_history");
   }
 }
 
