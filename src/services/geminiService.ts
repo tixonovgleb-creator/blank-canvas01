@@ -1,7 +1,6 @@
 // Gemini AI Service for chat functionality
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const HISTORY_KEY = 'berezka_chat_history';
 
 const SYSTEM_PROMPT = `Ты — дружелюбный и заботливый консультант базы отдыха «Берёзка».
 
@@ -27,127 +26,108 @@ const SYSTEM_PROMPT = `Ты — дружелюбный и заботливый �
 class GeminiService {
   private conversationHistory: { role: string; content: string }[] = [];
 
-  constructor() {
-    this.loadHistory();
-  }
-
-  private saveHistory(): void {
-    try {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(this.conversationHistory));
-    } catch (e) {
-      console.warn('Failed to save chat history:', e);
-    }
-  }
-
-  private loadHistory(): void {
-    try {
-      const saved = localStorage.getItem(HISTORY_KEY);
-      if (saved) {
-        this.conversationHistory = JSON.parse(saved);
-      }
-    } catch (e) {
-      console.warn('Failed to load chat history:', e);
-    }
-  }
-
   async *sendMessageStream(message: string): AsyncGenerator<string> {
-    this.conversationHistory.push({ role: 'user', content: message });
-    
+    this.conversationHistory.push({ role: "user", content: message });
+
     // If no API key, return a mock response
-    if (!API_KEY || API_KEY === 'PLACEHOLDER_API_KEY') {
+    if (!API_KEY || API_KEY === "PLACEHOLDER_API_KEY") {
       const mockResponse = this.getMockResponse(message);
       for (const char of mockResponse) {
         yield char;
-        await new Promise(resolve => setTimeout(resolve, 20));
+        await new Promise((resolve) => setTimeout(resolve, 20));
       }
-      this.conversationHistory.push({ role: 'assistant', content: mockResponse });
+      this.conversationHistory.push({ role: "assistant", content: mockResponse });
       return;
     }
 
     try {
-      const { GoogleGenAI } = await import('@google/genai');
+      const { GoogleGenAI } = await import("@google/genai");
       const ai = new GoogleGenAI({ apiKey: API_KEY });
-      
+
       // Build conversation with system prompt
-      const contents = [
-        { role: 'user', parts: [{ text: SYSTEM_PROMPT + '\n\nПользователь: ' + message }] }
-      ];
+      const contents = [{ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\nПользователь: " + message }] }];
 
       // Add conversation history for context
       if (this.conversationHistory.length > 1) {
         const historyContext = this.conversationHistory
           .slice(0, -1) // Exclude current message
-          .map(msg => `${msg.role === 'user' ? 'Пользователь' : 'Ассистент'}: ${msg.content}`)
-          .join('\n');
-        contents[0].parts[0].text = SYSTEM_PROMPT + '\n\nИстория диалога:\n' + historyContext + '\n\nПользователь: ' + message;
+          .map((msg) => `${msg.role === "user" ? "Пользователь" : "Ассистент"}: ${msg.content}`)
+          .join("\n");
+        contents[0].parts[0].text =
+          SYSTEM_PROMPT + "\n\nИстория диалога:\n" + historyContext + "\n\nПользователь: " + message;
       }
-      
+
       const response = await ai.models.generateContentStream({
-        model: 'gemini-2.0-flash',
+        model: "gemini-2.0-flash",
         contents: contents,
       });
 
-      let fullResponse = '';
-for await (const chunk of response) {
-  const text = chunk.text || '';
-  fullResponse += text;
-  yield text;
-}
+      let fullResponse = "";
+      for await (const chunk of response) {
+        const text = chunk.text || "";
+        fullResponse += text;
+        yield text;
+      }
 
-      this.conversationHistory.push({ role: 'assistant', content: fullResponse });
+      this.conversationHistory.push({ role: "assistant", content: fullResponse });
       this.saveHistory();
     } catch (error) {
-      console.error('Gemini API error:', error);
-      const errorMessage = 'Извините, произошла ошибка при обработке запроса. Попробуйте ещё раз или свяжитесь с администратором.';
+      console.error("Gemini API error:", error);
+      const errorMessage =
+        "Извините, произошла ошибка при обработке запроса. Попробуйте ещё раз или свяжитесь с администратором.";
       yield errorMessage;
     }
   }
 
   private getMockResponse(message: string): string {
     const lowerMessage = message.toLowerCase();
-    
-    if (lowerMessage.includes('домик') || lowerMessage.includes('дом')) {
-      return '🏡 У нас есть два уютных домика:\n\n• **Домик №1** — до 6 человек\n• **Домик №2** — до 9 человек\n\nДля уточнения цен и наличия мне нужно:\n📅 Дата и время\n👥 Количество гостей\n📱 Ваш телефон или Telegram\n\nАдминистратор свяжется для подтверждения!';
+
+    if (lowerMessage.includes("домик") || lowerMessage.includes("дом")) {
+      return "🏡 У нас есть два уютных домика:\n\n• **Домик №1** — до 6 человек\n• **Домик №2** — до 9 человек\n\nДля уточнения цен и наличия мне нужно:\n📅 Дата и время\n👥 Количество гостей\n📱 Ваш телефон или Telegram\n\nАдминистратор свяжется для подтверждения!";
     }
-    
-    if (lowerMessage.includes('беседк')) {
-      return '🌿 Беседки вместимостью 10–25 человек — отличный выбор для пикника!\n\nДля бронирования укажите:\n📅 Дату и время\n👥 Количество гостей\n📱 Контакт для связи\n\nАдминистратор подтвердит наличие и цену.';
+
+    if (lowerMessage.includes("беседк")) {
+      return "🌿 Беседки вместимостью 10–25 человек — отличный выбор для пикника!\n\nДля бронирования укажите:\n📅 Дату и время\n👥 Количество гостей\n📱 Контакт для связи\n\nАдминистратор подтвердит наличие и цену.";
     }
-    
-    if (lowerMessage.includes('бан')) {
-      return '🧖 Баня с парной — отличный отдых!\n\nЧтобы оформить заявку, укажите:\n📅 Дату и время\n👥 Количество человек\n📱 Телефон или Telegram\n\nАдминистратор перезвонит для подтверждения.';
+
+    if (lowerMessage.includes("бан")) {
+      return "🧖 Баня с парной — отличный отдых!\n\nЧтобы оформить заявку, укажите:\n📅 Дату и время\n👥 Количество человек\n📱 Телефон или Telegram\n\nАдминистратор перезвонит для подтверждения.";
     }
-    
-    if (lowerMessage.includes('зал') || lowerMessage.includes('банкет')) {
-      return '🎉 Банкетные залы на 35–100 человек — идеально для свадеб, юбилеев и корпоративов!\n\nДля расчёта укажите:\n📅 Дату мероприятия\n👥 Количество гостей\n📱 Контакт\n\nАдминистратор свяжется с деталями.';
+
+    if (lowerMessage.includes("зал") || lowerMessage.includes("банкет")) {
+      return "🎉 Банкетные залы на 35–100 человек — идеально для свадеб, юбилеев и корпоративов!\n\nДля расчёта укажите:\n📅 Дату мероприятия\n👥 Количество гостей\n📱 Контакт\n\nАдминистратор свяжется с деталями.";
     }
-    
-    if (lowerMessage.includes('цен') || lowerMessage.includes('стоим') || lowerMessage.includes('рассчит')) {
-      return '💰 Для расчёта стоимости мне нужно:\n\n📅 Дата и время\n🏡 Какой объект интересует?\n👥 Количество гостей\n📱 Ваш телефон или Telegram\n\nАдминистратор подтвердит цену и наличие!';
+
+    if (lowerMessage.includes("цен") || lowerMessage.includes("стоим") || lowerMessage.includes("рассчит")) {
+      return "💰 Для расчёта стоимости мне нужно:\n\n📅 Дата и время\n🏡 Какой объект интересует?\n👥 Количество гостей\n📱 Ваш телефон или Telegram\n\nАдминистратор подтвердит цену и наличие!";
     }
-    
-    if (lowerMessage.includes('где') || lowerMessage.includes('адрес') || lowerMessage.includes('находи') || lowerMessage.includes('добрать')) {
-      return '📍 База отдыха «Берёзка» находится в **7 км от Бобруйска**, в живописном сосновом бору. Удобный подъезд, есть парковка!';
+
+    if (
+      lowerMessage.includes("где") ||
+      lowerMessage.includes("адрес") ||
+      lowerMessage.includes("находи") ||
+      lowerMessage.includes("добрать")
+    ) {
+      return "📍 База отдыха «Берёзка» находится в **7 км от Бобруйска**, в живописном сосновом бору. Удобный подъезд, есть парковка!";
     }
-    
-    if (lowerMessage.includes('администратор') || lowerMessage.includes('связ') || lowerMessage.includes('позвон')) {
-      return '📞 Для связи с администратором оставьте:\n• Ваше имя\n• Телефон или Telegram\n• Вопрос\n\nАдминистратор свяжется с вами в ближайшее время!';
+
+    if (lowerMessage.includes("администратор") || lowerMessage.includes("связ") || lowerMessage.includes("позвон")) {
+      return "📞 Для связи с администратором оставьте:\n• Ваше имя\n• Телефон или Telegram\n• Вопрос\n\nАдминистратор свяжется с вами в ближайшее время!";
     }
-    
-    if (lowerMessage.includes('брон') || lowerMessage.includes('заказ') || lowerMessage.includes('заброн')) {
-      return '📝 Для оформления заявки на бронирование укажите:\n\n📅 Дату и время\n🏡 Объект (домик/беседка/баня/зал)\n👥 Количество гостей\n👤 Ваше имя\n📱 Телефон или Telegram\n\n⚠️ Бронь подтверждает только администратор!';
+
+    if (lowerMessage.includes("брон") || lowerMessage.includes("заказ") || lowerMessage.includes("заброн")) {
+      return "📝 Для оформления заявки на бронирование укажите:\n\n📅 Дату и время\n🏡 Объект (домик/беседка/баня/зал)\n👥 Количество гостей\n👤 Ваше имя\n📱 Телефон или Telegram\n\n⚠️ Бронь подтверждает только администратор!";
     }
-    
-    if (lowerMessage.includes('свободн') || lowerMessage.includes('выходн') || lowerMessage.includes('дат')) {
-      return '📅 Чтобы узнать свободные даты, укажите:\n\n🏡 Какой объект интересует?\n📅 Желаемые даты\n👥 Количество гостей\n📱 Контакт для связи\n\nАдминистратор проверит и свяжется с вами!';
+
+    if (lowerMessage.includes("свободн") || lowerMessage.includes("выходн") || lowerMessage.includes("дат")) {
+      return "📅 Чтобы узнать свободные даты, укажите:\n\n🏡 Какой объект интересует?\n📅 Желаемые даты\n👥 Количество гостей\n📱 Контакт для связи\n\nАдминистратор проверит и свяжется с вами!";
     }
-    
-    return '🌲 Добро пожаловать на базу отдыха «Берёзка»!\n\nУ нас есть:\n🏡 Домики (6 и 9 мест)\n🌿 Беседки (10–25 чел)\n🎉 Банкетные залы (35–100 чел)\n🧖 Баня с парной\n\nЧем могу помочь?';
+
+    return "🌲 Добро пожаловать на базу отдыха «Берёзка»!\n\nУ нас есть:\n🏡 Домики (6 и 9 мест)\n🌿 Беседки (10–25 чел)\n🎉 Банкетные залы (35–100 чел)\n🧖 Баня с парной\n\nЧем могу помочь?";
   }
 
   clearHistory(): void {
     this.conversationHistory = [];
-    localStorage.removeItem(HISTORY_KEY);
   }
 }
 
