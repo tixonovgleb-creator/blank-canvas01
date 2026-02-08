@@ -9,7 +9,6 @@ const SYSTEM_PROMPT = `Ты — дружелюбный и заботливый �
 • Локация: 7 км от Бобруйска, в живописном сосновом бору.
 • Бронирование: подтверждает только администратор. Ты НЕ подтверждаешь бронь и НЕ гарантируешь наличие мест.
 
-
 ПРАВИЛА ДИАЛОГА:
 1. НЕ начинай каждый ответ заново и НЕ повторяй приветствие.
 2. Всегда продолжай текущий разговор с учётом предыдущих сообщений.
@@ -23,13 +22,29 @@ const SYSTEM_PROMPT = `Ты — дружелюбный и заботливый �
 2. Не выдумывай факты. Если точной информации нет — предложи передать вопрос администратору.
 3. Отвечай коротко, вежливо и структурированно. Используй эмодзи для дружелюбности.
 4. Тон: тёплый, уверенный, заботливый.`;
-const HISTORY_KEY = "berezka_chat_history_v1";
 
 class GeminiService {
   private conversationHistory: { role: string; content: string }[] = [];
+  constructor() {
+    try {
+      const saved = localStorage.getItem(HISTORY_KEY);
+      if (saved) {
+        this.conversationHistory = JSON.parse(saved);
+      }
+    } catch {
+      this.conversationHistory = [];
+    }
+  }
+
+  private saveHistory() {
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(this.conversationHistory.slice(-30)));
+    } catch {}
+  }
 
   async *sendMessageStream(message: string): AsyncGenerator<string> {
     this.conversationHistory.push({ role: "user", content: message });
+    this.saveHistory();
 
     // If no API key, return a mock response
     if (!API_KEY || API_KEY === "PLACEHOLDER_API_KEY") {
