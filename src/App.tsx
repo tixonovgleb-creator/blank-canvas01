@@ -196,7 +196,7 @@ const App: React.FC = () => {
         </aside>
 
         {/* Main Chat Window */}
-        <main className="flex-1 flex flex-col bg-gray-50 z-0 relative min-h-0">
+        <main className="flex-1 flex flex-col bg-gray-50 z-0 relative">
           <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 hide-scrollbar">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
@@ -227,6 +227,16 @@ const App: React.FC = () => {
               </div>
             )}
             <div ref={messagesEndRef} />
+          </div>
+          {/* Footer (кнопки + ввод) */}
+          <div className="shrink-0 border-t border-emerald-100 bg-white/90 backdrop-blur-sm">
+            {/* быстрые кнопки */}
+            <div className="px-4 py-3 flex flex-wrap gap-2 justify-center">
+              {/* сюда перенеси твои кнопки: "Рассчитать стоимость", "Свободно..." и т.д. */}
+            </div>
+
+            {/* поле ввода */}
+            <div className="px-4 pb-4">{/* сюда перенеси твой input + кнопку отправки */}</div>
           </div>
 
           {/* Mini-Form Overlay for Calculation */}
