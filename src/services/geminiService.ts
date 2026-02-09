@@ -38,6 +38,7 @@ class GeminiService {
         await new Promise((resolve) => setTimeout(resolve, 20));
       }
       this.conversationHistory.push({ role: "assistant", content: mockResponse });
+      this.saveHistory();
       return;
     }
 
