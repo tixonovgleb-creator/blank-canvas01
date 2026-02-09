@@ -1,6 +1,7 @@
 // Gemini AI Service for chat functionality
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const HISTORY_KEY = "berezka_chat_history_v1";
 
 const SYSTEM_PROMPT = `Ты — дружелюбный и заботливый консультант базы отдыха «Берёзка».
 
@@ -54,11 +55,7 @@ class GeminiService {
           .map((msg) => `${msg.role === "user" ? "Пользователь" : "Ассистент"}: ${msg.content}`)
           .join("\n");
         contents[0].parts[0].text =
-          SYSTEM_PROMPT +
-          '\n\nИстория диалога:\n' +
-          historyContext +
-          '\n\nПользователь: ' +
-          message;
+          SYSTEM_PROMPT + "\n\nИстория диалога:\n" + historyContext + "\n\nПользователь: " + message;
       }
 
       const response = await ai.models.generateContentStream({
