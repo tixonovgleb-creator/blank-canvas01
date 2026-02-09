@@ -197,7 +197,7 @@ const App: React.FC = () => {
 
         {/* Main Chat Window */}
         <main className="flex-1 min-h-0 flex flex-col bg-gray-50 z-0 relative overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 hide-scrollbar">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 hide-scrollbar pb-32">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
                 <div
