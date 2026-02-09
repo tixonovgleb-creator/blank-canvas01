@@ -129,7 +129,7 @@ class GeminiService {
 
   private saveHistory(): void {
     try {
-      localStorage.setItem("berezka_chat_history", JSON.stringify(this.conversationHistory));
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(this.conversationHistory));
     } catch (e) {
       console.error("Failed to save history:", e);
     }
@@ -137,7 +137,7 @@ class GeminiService {
 
   clearHistory(): void {
     this.conversationHistory = [];
-    localStorage.removeItem("berezka_chat_history");
+    localStorage.removeItem(HISTORY_KEY);
   }
 }
 
